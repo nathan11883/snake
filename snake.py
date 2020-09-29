@@ -1,6 +1,7 @@
 """
 Snake Eater
 Made with PyGame
+
 https://gist.github.com/rajatdiptabiswas/bd0aaa46e975a4da5d090b801aba0611
 """
 
@@ -87,29 +88,74 @@ def show_score(choice, color, font, size):
     game_window.blit(score_surface, score_rect)
     # pygame.display.flip()
 
+def autoplay():
+    global change_to
+    global direction
+    print("autoplay")
+    if snake_pos[0] < food_pos[0]:
+        change_to  = 'RIGHT'
+        if direction == 'LEFT':
+            if snake_pos[1] < food_pos[1]:
+                change_to = 'DOWN'
+            else:
+                change_to = 'UP'
+    elif snake_pos[0] > food_pos[0]:
+        change_to = 'LEFT'
+        if direction == 'RIGHT':
+            if snake_pos[1] < food_pos[1]:
+                change_to = 'DOWN'
+            else:
+                change_to = 'UP'
+    elif snake_pos[1] < food_pos[1]:
+        change_to == 'DOWN'
+        if direction == "UP":
+            if snake_pos[0] > food_pos[0]:
+                change_to = "LEFT"
+            else:
+                change_to = "RIGHT"
+    elif snake_pos[1] > food_pos[1]:
+        change_to == 'UP'
+        if direction == "DOWN":
+            if snake_pos[0] > food_pos[0]:
+                change_to = "LEFT"
+            else:
+                change_to = "RIGHT"
+    else:
+        change_to = ""
+
+    ev = pygame.event.Event ( pygame.USEREVENT )
+    pygame.event.post ( ev )
+    return change_to
 
 # Main logic
 while True:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        print(f"$[{event.type}]  {event}")
+        if event.type == pygame.USEREVENT:
+            change_to = autoplay()
+        elif event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
         # Whenever a key is pressed down
         elif event.type == pygame.KEYDOWN:
-            # W -> Up; S -> Down; A -> Left; D -> Right
-            if event.key == pygame.K_UP or event.key == ord('w'):
-                change_to = 'UP'
-            if event.key == pygame.K_DOWN or event.key == ord('s'):
-                change_to = 'DOWN'
-            if event.key == pygame.K_LEFT or event.key == ord('a'):
-                change_to = 'LEFT'
-            if event.key == pygame.K_RIGHT or event.key == ord('d'):
-                change_to = 'RIGHT'
-            # Esc -> Create event to quit the game
-            if event.key == pygame.K_ESCAPE:
-                pygame.event.post(pygame.event.Event(pygame.QUIT))
+            if event.key == ord('p'):
+                change_to = autoplay()
+                print(f"change_to = {change_to}")
+            else:    
+                # W -> Up; S -> Down; A -> Left; D -> Right
+                if event.key == pygame.K_UP or event.key == ord('w'):
+                    change_to = 'UP'
+                if event.key == pygame.K_DOWN or event.key == ord('s'):
+                    change_to = 'DOWN'
+                if event.key == pygame.K_LEFT or event.key == ord('a'):
+                    change_to = 'LEFT'
+                if event.key == pygame.K_RIGHT or event.key == ord('d'):
+                    change_to = 'RIGHT'
+                # Esc -> Create event to quit the game
+                if event.key == pygame.K_ESCAPE:
+                    pygame.event.post(pygame.event.Event(pygame.QUIT))
 
-    # Making sure the snake cannot move in the opposite direction instantaneously
+            # Making sure the snake cannot move in the opposite direction instantaneously
     if change_to == 'UP' and direction != 'DOWN':
         direction = 'UP'
     if change_to == 'DOWN' and direction != 'UP':
@@ -156,12 +202,15 @@ while True:
     # Game Over conditions
     # Getting out of bounds
     if snake_pos[0] < 0 or snake_pos[0] > frame_size_x-10:
+        print(f"you die cus 1 {snake_pos}")
         game_over()
     if snake_pos[1] < 0 or snake_pos[1] > frame_size_y-10:
+        print(f"you die cus 2 {snake_pos}")
         game_over()
     # Touching the snake body
     for block in snake_body[1:]:
         if snake_pos[0] == block[0] and snake_pos[1] == block[1]:
+            print(f"you die cus 3 {snake_pos}")
             game_over()
 
     show_score(1, white, 'consolas', 20)
