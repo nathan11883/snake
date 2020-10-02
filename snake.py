@@ -88,10 +88,36 @@ def show_score(choice, color, font, size):
     game_window.blit(score_surface, score_rect)
     # pygame.display.flip()
 
-def autoplay():
+def check_snake():
+    global snake_pos
+    global snake_body
+    unavailable = [] 
+    for i in snake_body[1:]:
+        if snake_pos[1] - i[1] == 10 and snake_pos[0] == i[0]:
+            if "UP" not in unavailable:
+                unavailable.append("UP")
+        if snake_pos[1] - i[1] == -10 and snake_pos[0] == i[0]:
+            if "DOWN" not in unavailable:
+                unavailable.append("DOWN")
+        if snake_pos[0] - i[0] == 10 and snake_pos[1] == i[1]:
+            if "LEFT" not in unavailable:
+                unavailable.append("LEFT")
+        if snake_pos[0] - i[1] == -10 and snake_pos[1] == i[1]:
+            if "RIGHT" not in unavailable:
+                unavailable.append("RIGHT")
+    return unavailable
+
+'''
+def checksnake_left_right():
+    for i in snake_body[1:]:
+        if i[1] == snake_pos[1]:
+            return True
+    else:
+        return False
+'''
+def go_left_right():
     global change_to
-    global direction
-    print("autoplay")
+    global direction    
     if snake_pos[0] < food_pos[0]:
         change_to  = 'RIGHT'
         if direction == 'LEFT':
@@ -106,33 +132,130 @@ def autoplay():
                 change_to = 'DOWN'
             else:
                 change_to = 'UP'
-    elif snake_pos[1] < food_pos[1]:
-        change_to == 'DOWN'
-        if direction == "UP":
-            if snake_pos[0] > food_pos[0]:
-                change_to = "LEFT"
-            else:
-                change_to = "RIGHT"
-    elif snake_pos[1] > food_pos[1]:
-        change_to == 'UP'
-        if direction == "DOWN":
-            if snake_pos[0] > food_pos[0]:
-                change_to = "LEFT"
-            else:
-                change_to = "RIGHT"
     else:
         change_to = ""
 
-    ev = pygame.event.Event ( pygame.USEREVENT )
-    pygame.event.post ( ev )
     return change_to
 
+def go_up_down():
+    global change_to
+    global direction
+    
+    if snake_pos[1] < food_pos[1]:
+        #print(f"<<<<< {change_to}")
+        change_to = 'DOWN'
+        if direction == "UP":
+            if snake_pos[0] > food_pos[0]:
+                #print(f"LEFT1 {change_to}")
+                change_to = "LEFT"
+            else:
+                #print(f"<<<<<11  {change_to}")
+                change_to = "RIGHT"
+    elif snake_pos[1] > food_pos[1]:
+        #print(f">>>>>>>  {change_to}")
+        change_to = 'UP'
+        if direction == "DOWN":
+            if snake_pos[0] > food_pos[0]:
+                #print(f"LEFT2  {change_to}")
+                change_to = "LEFT"
+            else:
+                #print(f"<<222< {change_to}")
+                change_to = "RIGHT"
+    else:
+        change_to = ""
+    #print(f"change_to is set {change_to}")
+
+    return change_to
+
+def get_opposite(direction):
+    if (direction == "UP"):
+        return "DOWN"
+    elif (direction == "DOWN"):
+        return "UP"
+    elif (direction == "LEFT"):
+        return "RIGHT"
+    elif(direction == "RIGHT"):
+        return "LEFT"
+    else:
+        return ""
+
+def autoplay():
+    global change_to
+    global direction
+    priority = [""]*2
+    unavailable = check_snake()
+    print(f"autoplay direction={direction}, {snake_pos}, {food_pos} {change_to} {unavailable} {snake_body}")
+    if direction =="RIGHT":
+        unavailable.append("LEFT")
+    if direction =="LEFT":
+        unavailable.append("RIGHT")
+    if direction =="UP":
+        unavailable.append("DOWN")
+    if direction =="DOWN":
+        unavailable.append("UP")
+    
+    if snake_pos[0] == 0:
+        unavailable.append("LEFT")
+    elif snake_pos[0] == frame_size_x-10:
+        unavailable.append("RIGHT")
+    if snake_pos[1] == 0:
+        unavailable.append("UP")
+    elif snake_pos[1] == frame_size_y-10:
+        unavailable.append("DOWN")
+
+    if food_pos[0] > snake_pos[0]:
+        priority[0] = "RIGHT"
+    elif food_pos[0] < snake_pos[0]:
+        priority[0] = "LEFT"
+    if food_pos[1] < snake_pos[1]:
+        priority[1] = "UP"
+    elif food_pos[1] > snake_pos[1]:
+        priority[1] ="DOWN"
+    #---- above we get the direction
+    
+    
+    if priority[0]!= "" and priority[0] not in unavailable:
+        change_to = priority[0]
+        return change_to
+
+    if priority[1]!= "" and priority[1] not in unavailable:
+        change_to = priority[1]
+        return change_to
+    
+    priority[0] = get_opposite(priority[0])
+    if priority[0]!= "" and priority[0] not in unavailable:
+        change_to = priority[0]
+        return change_to
+
+    priority[1] = get_opposite(priority[1])    
+    if priority[1]!= "" and priority[1] not in unavailable:
+        change_to = priority[1]
+        return change_to
+
+    
+    if "UP" not in unavailable:
+        change_to = "UP"
+    elif "DOWN" not in unavailable:
+        change_to = "DOWN"
+    elif "LEFT" not in unavailable:
+        change_to = "LEFT"
+    elif "RIGHT" not in unavailable:
+        change_to = "RIGHT"
+    else:
+        change_to = ""
+    print(f"we will change to {change_to}")
+    return change_to
+
+
+
 # Main logic
+isAuto = False
 while True:
     for event in pygame.event.get():
         print(f"$[{event.type}]  {event}")
         if event.type == pygame.USEREVENT:
             change_to = autoplay()
+            isAuto = True
         elif event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
@@ -141,6 +264,7 @@ while True:
             if event.key == ord('p'):
                 change_to = autoplay()
                 print(f"change_to = {change_to}")
+                isAuto = True
             else:    
                 # W -> Up; S -> Down; A -> Left; D -> Right
                 if event.key == pygame.K_UP or event.key == ord('w'):
@@ -216,5 +340,10 @@ while True:
     show_score(1, white, 'consolas', 20)
     # Refresh game screen
     pygame.display.update()
+
+    if isAuto:
+        ev = pygame.event.Event ( pygame.USEREVENT )
+        pygame.event.post ( ev )
+
     # Refresh rate
     fps_controller.tick(difficulty)
