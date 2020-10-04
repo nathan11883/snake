@@ -14,7 +14,7 @@ import pygame, sys, time, random
 # Hard      ->  40
 # Harder    ->  60
 # Impossible->  120
-difficulty = 25
+difficulty = 40
 
 # Window size
 frame_size_x = 720
@@ -88,6 +88,17 @@ def show_score(choice, color, font, size):
     game_window.blit(score_surface, score_rect)
     # pygame.display.flip()
 
+
+def food_on_snake():
+    global snake_pos
+    global snake_body
+    global food_pos
+    for i in snake_body:
+        if food_pos[0] == i[0] and food_pos[1] == i[1]:
+            return True
+    return False
+
+
 def check_snake():
     global snake_pos
     global snake_body
@@ -102,7 +113,7 @@ def check_snake():
         if snake_pos[0] - i[0] == 10 and snake_pos[1] == i[1]:
             if "LEFT" not in unavailable:
                 unavailable.append("LEFT")
-        if snake_pos[0] - i[1] == -10 and snake_pos[1] == i[1]:
+        if snake_pos[0] - i[0] == -10 and snake_pos[1] == i[1]:
             if "RIGHT" not in unavailable:
                 unavailable.append("RIGHT")
     return unavailable
@@ -184,7 +195,7 @@ def autoplay():
     global direction
     priority = [""]*2
     unavailable = check_snake()
-    print(f"autoplay direction={direction}, {snake_pos}, {food_pos} {change_to} {unavailable} {snake_body}")
+    #print(f"autoplay direction={direction}, {snake_pos}, {food_pos} {change_to} --------UNAVAILABLE {unavailable} --------{snake_body}")
     if direction =="RIGHT":
         unavailable.append("LEFT")
     if direction =="LEFT":
@@ -224,6 +235,8 @@ def autoplay():
     
     priority[0] = get_opposite(priority[0])
     if priority[0]!= "" and priority[0] not in unavailable:
+        #if "LEFT" not in unavailable:
+        #    change_to = "LEFT"
         change_to = priority[0]
         return change_to
 
@@ -309,7 +322,11 @@ while True:
 
     # Spawning food on the screen
     if not food_spawn:
-        food_pos = [random.randrange(1, (frame_size_x//10)) * 10, random.randrange(1, (frame_size_y//10)) * 10]
+        while True:
+            food_pos = [random.randrange(1, (frame_size_x//10)) * 10, random.randrange(1, (frame_size_y//10)) * 10]
+            if not food_on_snake():
+                break
+
     food_spawn = True
 
     # GFX
